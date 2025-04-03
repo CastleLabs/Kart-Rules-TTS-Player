@@ -315,10 +315,7 @@ sudo journalctl -u kartsettings.service -f
 cat /opt/karts/announcement_script.log
 ```
 
-## Screenshots
 
-![Web Interface Screenshot](screenshots/web-interface.png)
-*Web Configuration Interface*
 
 ## License
 
