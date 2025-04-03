@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Error - GPIO Announcement System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    .error-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: var(--space-6);
+    }
+    
+    .error-icon {
+      font-size: 5rem;
+      color: var(--red);
+      margin-bottom: var(--space-4);
+    }
+    
+    .error-code {
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: var(--space-2);
+    }
+    
+    .error-message {
+      font-size: 1.5rem;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-5);
+    }
+    
+    .error-details {
+      background-color: rgba(0, 0, 0, 0.2);
+      padding: var(--space-3);
+      border-radius: var(--border-radius);
+      margin-bottom: var(--space-4);
+      max-width: 600px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-content">
+        <h1><i class="fas fa-bullhorn"></i> GPIO Announcement System</h1>
+      </div>
+    </header>
+
+    <main>
+      <div class="error-container">
+        <div class="error-icon">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        
+        <div class="error-code">
+          {{ error.code if hasattr(error, 'code') else '500' }}
+        </div>
+        
+        <div class="error-message">
+          {% if error.code == 404 %}
+            Page Not Found
+          {% elif error.code == 403 %}
+            Access Forbidden
+          {% elif error.code == 401 %}
+            Authentication Required
+          {% elif error.code == 400 %}
+            Bad Request
+          {% else %}
+            Server Error
+          {% endif %}
+        </div>
+        
+        <div class="error-details">
+          <p>{{ error.description if hasattr(error, 'description') else 'An unexpected error occurred.' }}</p>
+        </div>
+        
+        <a href="{{ url_for('index') }}" class="btn btn-primary">
+          <i class="fas fa-home"></i> Return to Home
+        </a>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; {{ current_year }} GPIO Announcement System</p>
+    </footer>
+  </div>
+</body>
+</html>

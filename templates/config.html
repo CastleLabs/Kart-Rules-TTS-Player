@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Castle Fun Center - Go-Kart Announcement System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    .logo-container {
+      display: flex;
+      align-items: center;
+      margin-bottom: var(--space-4);
+    }
+    
+    .logo {
+      max-height: 80px;
+      margin-right: var(--space-3);
+    }
+    
+    .app-title {
+      flex: 1;
+    }
+    
+    .rules-icon {
+      color: #2563eb;
+    }
+    
+    .seated-icon {
+      color: #7c3aed;
+    }
+    
+    .other-icon {
+      color: #059669;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Castle Fun Center Logo" class="logo">
+        <div class="app-title">
+          <h1><i class="fas fa-flag-checkered"></i> Go-Kart Announcement System</h1>
+          <p class="subtitle">Castle Fun Center</p>
+        </div>
+        <div class="clock" id="clock">{{ current_time.strftime('%H:%M:%S') }}</div>
+      </div>
+      <p class="subtitle">Configure and test go-kart safety announcements</p>
+    </header>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">
+            <span class="alert-icon">
+              {% if category == 'success' %}
+                <i class="fas fa-check-circle"></i>
+              {% elif category == 'error' %}
+                <i class="fas fa-exclamation-circle"></i>
+              {% else %}
+                <i class="fas fa-info-circle"></i>
+              {% endif %}
+            </span>
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <main>
+      <form id="configForm" method="POST" action="{{ url_for('save_config') }}">
+        <div class="card" id="announcements-card">
+          <h2><i class="fas fa-microphone-alt"></i> Go-Kart Announcements</h2>
+          <div class="card-content">
+            <div class="form-group">
+              <label for="button1" class="form-label">
+                <i class="fas fa-list-ol rules-icon"></i> Button 1: Safety Rules
+              </label>
+              <textarea id="button1" name="button1" rows="3" class="form-control" required
+                placeholder="Enter go-kart safety rules announcement text">{{ announcements.button1 }}</textarea>
+              <small class="form-helper">This announcement will play when Button 1 is pressed. Typically used for track rules and safety instructions.</small>
+            </div>
+            
+            <div class="form-group">
+              <label for="button2" class="form-label">
+                <i class="fas fa-chair seated-icon"></i> Button 2: Remain Seated
+              </label>
+              <textarea id="button2" name="button2" rows="2" class="form-control" required
+                placeholder="Enter 'remain seated' announcement text">{{ announcements.button2 }}</textarea>
+              <small class="form-helper">This announcement will play when Button 2 is pressed. Used for reminding drivers to remain seated at all times.</small>
+            </div>
+            
+            <div class="form-group">
+              <label for="button3" class="form-label">
+                <i class="fas fa-exclamation-triangle other-icon"></i> Button 3: Other Announcement
+              </label>
+              <textarea id="button3" name="button3" rows="2" class="form-control" required
+                placeholder="Enter additional announcement text">{{ announcements.button3 }}</textarea>
+              <small class="form-helper">This announcement will play when Button 3 is pressed. Can be used for any other messages as needed.</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="tts-card">
+          <h2><i class="fas fa-cog"></i> TTS Configuration</h2>
+          <div class="card-content">
+            <div class="form-group">
+              <label for="voice_id" class="form-label">Voice ID</label>
+              <div class="input-with-help">
+                <select id="voice_id" name="voice_id" class="form-control" required>
+                  <option value="en-US-AndrewMultilingualNeural" {% if tts.voice_id == 'en-US-AndrewMultilingualNeural' %}selected{% endif %}>English (US) - Andrew (Male)</option>
+                  <option value="en-US-JennyMultilingualNeural" {% if tts.voice_id == 'en-US-JennyMultilingualNeural' %}selected{% endif %}>English (US) - Jenny (Female)</option>
+                  <option value="en-US-GuyNeural" {% if tts.voice_id == 'en-US-GuyNeural' %}selected{% endif %}>English (US) - Guy (Male)</option>
+                  <option value="en-US-SaraNeural" {% if tts.voice_id == 'en-US-SaraNeural' %}selected{% endif %}>English (US) - Sara (Female)</option>
+                  <option value="en-GB-RyanNeural" {% if tts.voice_id == 'en-GB-RyanNeural' %}selected{% endif %}>English (UK) - Ryan (Male)</option>
+                  <option value="en-GB-SoniaNeural" {% if tts.voice_id == 'en-GB-SoniaNeural' %}selected{% endif %}>English (UK) - Sonia (Female)</option>
+                </select>
+                <div class="help-tooltip">
+                  <i class="fas fa-info-circle"></i>
+                  <span class="tooltip-text">Select a voice for the announcements</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="output_format" class="form-label">Output Format</label>
+              <select id="output_format" name="output_format" class="form-control" required>
+                <option value="mp3" {% if tts.output_format == 'mp3' %}selected{% endif %}>MP3</option>
+                <option value="wav" {% if tts.output_format == 'wav' %}selected{% endif %}>WAV</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Save Configuration
+          </button>
+        </div>
+      </form>
+
+      <div class="card" id="test-card">
+        <h2><i class="fas fa-play-circle"></i> Test Announcements</h2>
+        <div class="card-content">
+          <p>Click a button below to test the corresponding announcement:</p>
+          <div class="test-buttons">
+            <button type="button" class="btn btn-blue" id="test-button1">
+              <i class="fas fa-play"></i> Test Safety Rules
+            </button>
+            <button type="button" class="btn btn-purple" id="test-button2">
+              <i class="fas fa-play"></i> Test Remain Seated
+            </button>
+            <button type="button" class="btn btn-green" id="test-button3">
+              <i class="fas fa-play"></i> Test Other Announcement
+            </button>
+          </div>
+          <div id="test-status" class="status-message"></div>
+        </div>
+      </div>
+      
+      <div class="card" id="gpio-info-card">
+        <h2><i class="fas fa-microchip"></i> Button Information</h2>
+        <div class="card-content">
+          <div class="gpio-info">
+            <div class="gpio-item">
+              <div class="gpio-label">Button 1 (GPIO {{ gpio.button1 if gpio is defined else '17' }})</div>
+              <div class="gpio-desc">Safety Rules Announcement</div>
+            </div>
+            <div class="gpio-item">
+              <div class="gpio-label">Button 2 (GPIO {{ gpio.button2 if gpio is defined else '27' }})</div>
+              <div class="gpio-desc">Remain Seated Announcement</div>
+            </div>
+            <div class="gpio-item">
+              <div class="gpio-label">Button 3 (GPIO {{ gpio.button3 if gpio is defined else '22' }})</div>
+              <div class="gpio-desc">Other Announcement</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="log-card">
+        <h2><i class="fas fa-list-alt"></i> System Status</h2>
+        <div class="card-content">
+          <div class="status-grid">
+            <div class="status-item">
+              <div class="status-label">Speech Synthesis</div>
+              <div class="status-value running"><i class="fas fa-check-circle"></i> Running</div>
+            </div>
+            <div class="status-item">
+              <div class="status-label">Button Monitoring</div>
+              <div class="status-value running"><i class="fas fa-check-circle"></i> Active</div>
+            </div>
+            <div class="status-item">
+              <div class="status-label">Audio Playback</div>
+              <div class="status-value running"><i class="fas fa-check-circle"></i> Ready</div>
+            </div>
+          </div>
+          <div class="log-actions">
+            <button type="button" class="btn btn-secondary" id="view-logs">
+              <i class="fas fa-file-alt"></i> View Logs
+            </button>
+            <button type="button" class="btn btn-warning" id="restart-service">
+              <i class="fas fa-sync"></i> Restart Service
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; {{ current_year }} Castle Fun Center - Go-Kart Announcement System | Version 1.0.0</p>
+    </footer>
+  </div>
+
+  <!-- Modal for logs -->
+  <div id="log-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>System Logs</h3>
+        <button id="close-modal" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="log-container">
+          <pre id="log-content">Loading logs...</pre>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" id="refresh-logs">
+            <i class="fas fa-sync"></i> Refresh
+          </button>
+          <button class="btn btn-primary" id="download-logs">
+            <i class="fas fa-download"></i> Download
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading overlay -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
+  <script>
+    // Update clock every second
+    setInterval(function() {
+      const now = new Date();
+      document.getElementById('clock').textContent = 
+        now.getHours().toString().padStart(2, '0') + ':' +
+        now.getMinutes().toString().padStart(2, '0') + ':' +
+        now.getSeconds().toString().padStart(2, '0');
+    }, 1000);
+
+    // Modal functionality
+    document.getElementById('view-logs').addEventListener('click', function() {
+      document.getElementById('log-modal').style.display = 'block';
+      // Here you would fetch actual logs from the server
+      fetch('/logs')
+        .then(response => response.text())
+        .then(data => {
+          document.getElementById('log-content').textContent = data || 'No logs available';
+        })
+        .catch(error => {
+          document.getElementById('log-content').textContent = 'Error loading logs: ' + error.message;
+        });
+    });
+
+    document.getElementById('close-modal').addEventListener('click', function() {
+      document.getElementById('log-modal').style.display = 'none';
+    });
+
+    // Close modal if clicked outside
+    window.addEventListener('click', function(event) {
+      if (event.target == document.getElementById('log-modal')) {
+        document.getElementById('log-modal').style.display = 'none';
+      }
+    });
+    
+    // Restart service functionality
+    document.getElementById('restart-service').addEventListener('click', function() {
+      if (confirm('Are you sure you want to restart the announcement service?')) {
+        document.getElementById('loading-overlay').classList.add('active');
+        fetch('/restart_service', {
+          method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('loading-overlay').classList.remove('active');
+          if (data.success) {
+            alert('Service restarted successfully.');
+          } else {
+            alert('Error restarting service: ' + data.error);
+          }
+        })
+        .catch(error => {
+          document.getElementById('loading-overlay').classList.remove('active');
+          alert('Error restarting service: ' + error.message);
+        });
+      }
+    });
+    
+    // Download logs functionality
+    document.getElementById('download-logs').addEventListener('click', function() {
+      window.location.href = '/download_logs';
+    });
+    
+    // Refresh logs functionality
+    document.getElementById('refresh-logs').addEventListener('click', function() {
+      document.getElementById('log-content').textContent = 'Loading logs...';
+      fetch('/logs')
+        .then(response => response.text())
+        .then(data => {
+          document.getElementById('log-content').textContent = data || 'No logs available';
+        })
+        .catch(error => {
+          document.getElementById('log-content').textContent = 'Error loading logs: ' + error.message;
+        });
+    });
+  </script>
+</body>
+</html>
