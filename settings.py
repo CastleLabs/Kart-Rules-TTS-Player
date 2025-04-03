@@ -7,7 +7,7 @@ Provides a web interface for managing announcement texts, TTS settings,
 testing playback, and monitoring the system. Works in conjunction with
 kartrules.py.
 
-Author: Seth Morrow (Based on original project structure)
+Author: Seth Morrow 
 """
 
 # Standard library imports
