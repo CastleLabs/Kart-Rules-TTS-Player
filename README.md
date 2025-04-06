@@ -1,6 +1,6 @@
 # Castle Fun Center - Go-Kart Announcement System
 
-A Raspberry Pi-based announcement system for go-kart track safety announcements, featuring physical button triggers and a web-based configuration interface.
+A Raspberry Pi‑based announcement system for go‑kart track safety announcements featuring physical button triggers, a modern web‑based configuration interface, and enhanced logging and audio playback features.
 
 **Author:** Seth Morrow
 
@@ -8,76 +8,68 @@ A Raspberry Pi-based announcement system for go-kart track safety announcements,
 - [Overview](#overview)
 - [Features](#features)
 - [System Components](#system-components)
-  - [Button Monitoring Service (`kartrules.py`)](#button-monitoring-service-kartrulespy)
-  - [Web Configuration Interface (`settings.py`)](#web-configuration-interface-settingspy)
-  - [Configuration File (`config.ini`)](#configuration-file-configini)
+  - [Button Monitoring Service](#button-monitoring-service-kartrulespy)
+  - [Web Configuration Interface](#web-configuration-interface-settingspy)
+  - [Configuration File](#configuration-file-configini)
+  - [Web UI Templates](#web-ui-templates)
+  - [Client-side Script](#client-side-script-mainjs)
+  - [Stylesheet](#stylesheet-stylecss)
 - [Hardware Requirements](#hardware-requirements)
 - [Raspberry Pi 4 Setup Instructions](#raspberry-pi-4-setup-instructions)
 - [Wiring Guide](#wiring-guide)
 - [Usage Instructions](#usage-instructions)
 - [Troubleshooting](#troubleshooting)
-- [Screenshots](#screenshots)
 - [License](#license)
 
 ## Overview
+This project is a robust, Raspberry Pi‑based system designed for rapid safety announcement playback on the Castle Fun Center's go‑kart track. It combines physical button triggers with a web‑based configuration interface to allow track staff to quickly play announcements. Recent updates include:
 
-This project provides a system for playing pre-recorded safety announcements on the Castle Fun Center's go-kart track using physical buttons connected to a Raspberry Pi. The system uses Text-to-Speech (TTS) technology to convert announcement text into natural-sounding voice announcements that are played through the Raspberry Pi's audio output.
-
-The announcements are triggered by physical buttons for quick access by track staff:
-- **Button 1**: Safety Rules - Plays the track rules and safety instructions
-- **Button 2**: Remain Seated - Reminder for drivers to remain seated at all times
-- **Button 3**: Other Announcement - Configurable for any other messages as needed
+- **Rotating Logs:** Log files are now managed using a rotating log handler to keep file sizes in check.
+- **Dedicated Yiddish Announcement:** A new button and corresponding web endpoint to play a pre‑recorded Yiddish MP3.
+- **Enhanced TTS Caching:** Improved caching and pre‑generation of TTS audio files to ensure near‑instant playback.
 
 ## Features
-
-- **Physical Button Triggers**: Easy-to-access physical buttons for staff use
-- **Web Configuration Interface**: Modern web UI for customizing announcements and settings
-- **High-Quality Text-to-Speech**: Uses Microsoft Edge TTS for natural-sounding announcements
-- **Audio Caching**: Pre-generates and caches audio files for instant playback
-- **Multiple Voice Options**: Choose from various voices and accents
-- **Real-time Testing**: Test announcements from the web interface before deploying
-- **Status Monitoring**: View system status and logs through the web interface
-- **Automatic Service Restart**: Configuration changes automatically restart the service
-- **Debounce Protection**: Prevents accidental multiple triggers
+- **Physical Button Triggers:** Quick access through dedicated hardware buttons.
+- **Web Configuration Interface:** Configure announcement texts and settings via an intuitive web UI.
+- **High‑Quality Text‑to‑Speech:** Converts announcement text to speech using Microsoft Edge TTS.
+- **Audio Caching & Pre‑generation:** Automatically generates and caches audio files to minimize playback delay.
+- **Rotating Logs:** Uses a rotating log mechanism to manage log file sizes and prevent disk bloat.
+- **Dedicated Yiddish MP3 Playback:** A special button triggers playback of a pre‑recorded Yiddish announcement.
+- **Service Auto‑Restart:** Services automatically restart upon configuration changes.
+- **Debounce Protection:** Ensures only one announcement is triggered per button press.
+- **Real‑time Status Monitoring:** Displays system status and allows viewing/downloading of logs through the web interface.
 
 ## System Components
 
-### Button Monitoring Service (`kartrules.py`)
+### Button Monitoring Service (kartrules.py)
+**Role:** Monitors GPIO pins for button presses and plays the corresponding announcements.
 
-A background service that monitors GPIO pins for button presses and plays the corresponding announcements:
+**Key Points:**
+- Loads configuration from config.ini.
+- Uses internal debouncing to prevent duplicate triggers.
+- Generates TTS audio files using Edge TTS and caches them in /tmp/tts_cache.
+- Implements a lock file mechanism to prevent overlapping announcements.
+- Now utilizes a rotating log handler to limit log file size.
 
-- Runs continuously as a system service
-- Loads configuration from `config.ini`
-- Monitors GPIO pins for button presses
-- Implements debouncing to prevent multiple triggers
-- Generates speech from text using Edge TTS
-- Caches audio files to improve performance
-- Creates a lock file while playing to prevent overlapping announcements
-- Logs all activities to `announcement_script.log`
+### Web Configuration Interface (settings.py)
+**Role:** Provides a Flask‑based web UI for managing and testing announcements.
 
-### Web Configuration Interface (`settings.py`)
+**Key Points:**
+- Allows editing of announcement texts, including for button4 (Yiddish announcement).
+- Supports TTS configuration (voice ID and output format).
+- Includes a test interface with dedicated buttons for each announcement, including one for playing the Yiddish MP3.
+- Provides system status, log viewing, cache management, and service restart functionality.
+- Uses the same rotating log mechanism as the button service.
 
-A Flask-based web application for configuring the system:
-
-- Provides a user-friendly interface accessible via browser
-- Allows editing of announcement texts for all buttons
-- Offers voice selection and audio format configuration
-- Enables real-time testing of announcements
-- Displays system status indicators
-- Provides access to system logs
-- Includes service restart functionality
-- Manages the TTS cache
-- Uses the same locking mechanism as `kartrules.py`
-
-### Configuration File (`config.ini`)
-
-A simple text file storing key settings:
+### Configuration File (config.ini)
+Stores all key settings including announcement texts, TTS settings, and GPIO pin assignments. For example:
 
 ```ini
 [announcements]
-button1 = Safety rules announcement text goes here.
-button2 = Please remain seated at all times.
-button3 = Other announcement text goes here.
+button1 = To ride the Road Course you must be at least 54 inches tall.
+button2 = Please remain seated, DO NOT get up until a staff member tells you to.
+button3 = This is an extra announcement button.
+button4 = # This button will play the pre-existing Yiddish announcement.
 
 [tts]
 voice_id = en-US-AndrewMultilingualNeural
@@ -87,95 +79,80 @@ output_format = mp3
 button1 = 17
 button2 = 27
 button3 = 22
+button4 = 23
 ```
 
-## Hardware Requirements
+### Web UI Templates
+**config.html:**
+Contains the web interface for configuring and testing announcements. It includes a new test button for playing the Yiddish MP3 and displays real‑time system status and logs.
 
+**error.html:**
+Provides custom error pages for handling 404 and 500 errors gracefully.
+
+### Client-side Script (main.js)
+Handles dynamic behavior of the web UI, including:
+- Periodic status checking.
+- Form validation and flash message auto‑hide.
+- Event listeners for test buttons, including a new handler for the Yiddish announcement.
+
+### Stylesheet (style.css)
+Provides modern, professional styling for the UI, ensuring a responsive and user‑friendly experience across devices.
+
+## Hardware Requirements
 - Raspberry Pi 4 (2GB+ RAM recommended)
 - SD card (16GB+ recommended) with Raspberry Pi OS
 - Power supply for Raspberry Pi
-- Active speakers or audio amplifier connected to the Raspberry Pi's audio output
-- 3 momentary push buttons
+- Active speakers or audio amplifier connected to the Pi's audio output
+- 3 momentary push buttons (physical triggers)
 - Wires for connecting buttons to GPIO pins
-- Optional: Case for Raspberry Pi and buttons
+- Optional: Protective case for the Raspberry Pi and buttons
 
 ## Raspberry Pi 4 Setup Instructions
-
-These instructions assume you are starting with a Raspberry Pi 4 running Raspberry Pi OS (or a similar Debian-based Linux distribution) and have terminal (SSH or direct) access.
+These instructions assume you are starting with a Raspberry Pi 4 running Raspberry Pi OS with terminal (SSH or direct) access.
 
 ### Step 1: System Update & Prerequisites
-
-First, update your system's package list and install necessary tools:
-
 ```bash
 sudo apt update
 sudo apt upgrade -y
 sudo apt install -y python3 python3-pip python3-venv mpg123 git
 ```
 
-- `python3`, `python3-pip`, `python3-venv`: Ensure Python 3 and its package manager/virtual environment tools are installed.
-- `mpg123`: The command-line audio player used by the scripts.
-- `git`: Useful for potentially cloning the project repository.
-
-### Step 2: Create Project Directory and User (Optional but Recommended)
-
-It's good practice to run services under a dedicated user and directory.
-
+### Step 2: Create Project Directory and Dedicated User
 ```bash
-# Create a directory for the application
 sudo mkdir /opt/karts
-# Create a user for the application (no password, system account)
 sudo useradd --system --group --shell /bin/false karts
-# Set ownership of the directory
 sudo chown -R karts:karts /opt/karts
 ```
 
 ### Step 3: Place Project Files
-
-Transfer all the project files into the `/opt/karts` directory. Ensure the karts user owns them:
-
+Copy all project files into /opt/karts and adjust ownership:
 ```bash
-# Example: If files are in the current user's home directory in a folder 'KartsFINAL'
-sudo cp -r ~/KartsFINAL/* /opt/karts/
+sudo cp -r ~/YourProjectFolder/* /opt/karts/
 sudo chown -R karts:karts /opt/karts
 ```
 
-### Step 4: Create Python Virtual Environment and Install Dependencies
-
-Navigate to the project directory and set up a virtual environment for Python packages.
-
+### Step 4: Create Python Virtual Environment & Install Dependencies
 ```bash
 cd /opt/karts
-# Create virtual environment as the 'karts' user
 sudo -u karts python3 -m venv .venv
-# Activate environment (temporarily in current shell for installing packages)
 source .venv/bin/activate
-# Install Python libraries using pip (as 'karts' user)
 sudo -u karts .venv/bin/pip install RPi.GPIO edge-tts Flask
-# Deactivate environment (we'll specify the full path in the service file)
 deactivate
 ```
 
 ### Step 5: Configure Audio Output
-
-Ensure the Raspberry Pi's audio output is configured correctly (e.g., HDMI or the 3.5mm jack). You can use raspi-config:
-
+Ensure the Raspberry Pi's audio output is set correctly (e.g., HDMI or 3.5mm jack):
 ```bash
 sudo raspi-config
 ```
-
-Navigate to `System Options` -> `Audio` and select the desired output.
+Select System Options → Audio and choose the desired output.
 
 ### Step 6: Create Systemd Service Files
-
-Create the first service file for the button monitoring script:
-
+For the Button Monitoring Service:
 ```bash
 sudo nano /etc/systemd/system/kartrules.service
 ```
-
 Paste the following content:
-
 ```ini
 [Unit]
 Description=Go-Kart Rules Button Monitor Service
@@ -185,7 +162,6 @@ After=network.target sound.target
 User=karts
 Group=karts
 WorkingDirectory=/opt/karts
-# Execute the script using the Python interpreter inside the virtual environment
 ExecStart=/opt/karts/.venv/bin/python /opt/karts/kartrules.py
 Restart=always
 StandardOutput=journal
@@ -195,14 +171,11 @@ StandardError=journal
 WantedBy=multi-user.target
 ```
 
-Create the second service file for the web settings interface:
-
+For the Web Configuration Interface:
 ```bash
 sudo nano /etc/systemd/system/kartsettings.service
 ```
-
 Paste the following content:
-
 ```ini
 [Unit]
 Description=Go-Kart Rules Web Settings Service
@@ -213,7 +186,6 @@ BindsTo=kartrules.service
 User=karts
 Group=karts
 WorkingDirectory=/opt/karts
-# Execute the Flask app using the Python interpreter inside the virtual environment
 ExecStart=/opt/karts/.venv/bin/python /opt/karts/settings.py
 Restart=always
 StandardOutput=journal
@@ -224,7 +196,6 @@ WantedBy=multi-user.target
 ```
 
 ### Step 7: Enable and Start the Services
-
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable kartrules.service
@@ -234,93 +205,99 @@ sudo systemctl start kartsettings.service
 ```
 
 ### Step 8: Verify Operation
-
-Check Service Status:
-
+Check the status of each service:
 ```bash
 sudo systemctl status kartrules.service
 sudo systemctl status kartsettings.service
-# View logs
 sudo journalctl -u kartrules.service -f
 sudo journalctl -u kartsettings.service -f
 ```
 
 ## Wiring Guide
+Connect each momentary push button between its designated GPIO pin and a Ground (GND) pin. The system uses internal pull‑up resistors, so only a connection to GND is needed.
 
-Connect momentary push buttons between the configured GPIO pins and a Ground (GND) pin on the Raspberry Pi. The `kartrules.py` script uses the internal pull-up resistors (`pull_up_down=GPIO.PUD_UP`), so you only need the button and wires.
+Default GPIO Assignments (see config.ini):
+- Button 1 (Safety Rules): BCM 17
+- Button 2 (Remain Seated): BCM 27
+- Button 3 (Other Announcement): BCM 22
+- Button 4 (Yiddish Announcement): BCM 23
 
-**Default Pins (Check config.ini):**
-- Button 1 (Safety Rules): BCM Pin 17
-- Button 2 (Remain Seated): BCM Pin 27
-- Button 3 (Other Announcement): BCM Pin 22
-
-Connect one side of each button to the respective GPIO pin and the other side to any GND pin.
-
-![GPIO Pinout Diagram](https://pinout.xyz/resources/raspberry-pi-pinout.png)
+Refer to the Raspberry Pi GPIO pinout diagram for proper wiring.
 
 ## Usage Instructions
 
 ### Accessing the Web Interface
+Determine your Raspberry Pi's IP address using:
+```bash
+hostname -I
+```
+Open a web browser on a device in the same network.
 
-1. Find your Raspberry Pi's IP address using `hostname -I` in the terminal
-2. Open a web browser on any device on the same network
-3. Navigate to `http://<RaspberryPi_IP>:5000`
+Navigate to http://<RaspberryPi_IP>:5000.
 
 ### Configuring Announcements
-
-1. Log in to the web interface
-2. Edit the text for each button as needed
-3. Select the desired voice from the dropdown menu
-4. Click "Save Configuration" - the service will automatically restart
-5. Use the "Test" buttons to preview the announcements
+1. Log in to the web interface.
+2. Edit the announcement texts for each button.
+3. The Yiddish announcement (Button 4) is configured to play a pre‑recorded MP3 located at /home/tech/yiddish.mp3.
+4. Click "Save Configuration" to apply changes; the system will automatically restart if needed.
+5. Use the test buttons to preview announcements, including the dedicated Yiddish test button.
 
 ### Using the Physical Buttons
-
-Simply press the physical buttons connected to the Raspberry Pi to play the corresponding announcements through the configured audio output.
+Press the physical buttons connected to the Raspberry Pi to trigger the corresponding announcements through the configured audio output.
 
 ## Troubleshooting
 
 ### Common Issues
+**No Audio Output:**
+- Ensure the correct audio output is selected via raspi-config.
+- Verify that speakers or an amplifier are connected and powered.
+- Check volume settings using alsamixer.
 
-1. **No audio output:**
-   - Check that the correct audio output is selected in `raspi-config`
-   - Ensure speakers are connected and powered on
-   - Verify audio is not muted (`alsamixer` command)
+**Buttons Not Responding:**
+- Verify wiring connections and correct GPIO pin assignments in config.ini.
+- Check service logs using:
+```bash
+sudo journalctl -u kartrules.service -f
+```
 
-2. **Buttons not responding:**
-   - Check the wiring connections
-   - Verify the correct GPIO pins are configured in `config.ini`
-   - Check the system logs for errors: `sudo journalctl -u kartrules.service -f`
+**Web Interface Inaccessible:**
+- Ensure the Raspberry Pi is connected to the network.
+- Verify that the kartsettings.service is running:
+```bash
+sudo systemctl status kartsettings.service
+```
 
-3. **Web interface not accessible:**
-   - Ensure the Raspberry Pi is connected to the network
-   - Verify that the `kartsettings.service` is running: `sudo systemctl status kartsettings.service`
-   - Check for firewall issues that might be blocking port 5000
+**Permission Errors for TTS Cache:**
+- Since security is not a primary concern, ensure the TTS cache directory is world‑writable:
+```bash
+sudo chmod -R 777 /tmp/tts_cache
+```
 
-4. **Failed to generate speech:**
-   - Ensure `edge-tts` is installed correctly
-   - Check internet connection (needed for initial TTS setup)
-   - Review logs for specific errors
+**TTS Synthesis Failures:**
+- Verify that edge-tts is installed correctly.
+- Ensure the Raspberry Pi has a stable internet connection for TTS services.
+- Review logs for specific DNS or connectivity errors.
 
 ### Viewing Logs
+**Web Interface:**
+Click the "View Logs" button on the System Status card.
 
-Through the web interface:
-1. Access the web UI
-2. Click the "View Logs" button on the System Status card
-
-Through the terminal:
+**Terminal:**
 ```bash
 sudo journalctl -u kartrules.service -f
 sudo journalctl -u kartsettings.service -f
 cat /opt/karts/announcement_script.log
 ```
 
+### New Features Overview
+**Rotating Logs:**
+The system now employs a rotating log handler (configured in both kartrules.py and settings.py) to manage log file sizes and prevent disk usage issues.
 
+**Dedicated Yiddish Announcement:**
+A new button in the web interface and a corresponding GPIO configuration (Button 4) have been added to play a pre‑recorded Yiddish MP3 located at /home/tech/yiddish.mp3.
+
+**Enhanced TTS Caching:**
+Improved caching and pre‑generation of TTS audio files ensure faster playback.
 
 ## License
-
 This project is provided for Castle Fun Center. All rights reserved.
-
----
-
-© 2025 Castle Fun Center - Go-Kart Announcement System
