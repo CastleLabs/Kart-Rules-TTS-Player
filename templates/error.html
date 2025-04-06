@@ -59,7 +59,7 @@
         </div>
         
         <div class="error-code">
-          {{ error.code if hasattr(error, 'code') else '500' }}
+          {{ error.code | default('500') }}
         </div>
         
         <div class="error-message">
@@ -77,7 +77,7 @@
         </div>
         
         <div class="error-details">
-          <p>{{ error.description if hasattr(error, 'description') else 'An unexpected error occurred.' }}</p>
+          <p>{{ error.description | default('An unexpected error occurred.') }}</p>
         </div>
         
         <a href="{{ url_for('index') }}" class="btn btn-primary">
