@@ -20,7 +20,7 @@ A Raspberry Pi‑based announcement system for go‑kart track safety announceme
 - [Usage Instructions](#usage-instructions)
 - [Troubleshooting](#troubleshooting)
 - [License](#license)
-
+[kartRulesUI.png]
 ## Overview
 This project is a robust, Raspberry Pi‑based system designed for rapid safety announcement playback on the Castle Fun Center's go‑kart track. It combines physical button triggers with a web‑based configuration interface to allow track staff to quickly play announcements. Recent updates include:
 
