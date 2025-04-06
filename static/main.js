@@ -100,7 +100,7 @@ function testAnnouncement(text, buttonName) {
             return response.json().then(data => { throw new Error('Please wait for the current announcement to finish'); });
         }
         if (!response.ok) {
-            return response.json().then(data => { throw new Error(data.error || 'Failed to play announcement'); });
+            return response.json().then(data => { throw new Error(data.error || 'Failed to play announcement, please save any changes.'); });
         }
         return response.json();
     })
