@@ -1,3 +1,10 @@
+<!--
+Written by Seth Morrow
+
+This HTML file implements the configuration and testing UI for the Go-Kart Announcement System.
+It includes sections for configuring announcements, testing them, and displaying system status.
+A new button has been added to test the Yiddish announcement.
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,24 +19,19 @@
       align-items: center;
       margin-bottom: var(--space-4);
     }
-    
     .logo {
       max-height: 80px;
       margin-right: var(--space-3);
     }
-    
     .app-title {
       flex: 1;
     }
-    
     .rules-icon {
       color: #2563eb;
     }
-    
     .seated-icon {
       color: #7c3aed;
     }
-    
     .other-icon {
       color: #059669;
     }
@@ -82,7 +84,6 @@
                 placeholder="Enter go-kart safety rules announcement text">{{ announcements.button1 }}</textarea>
               <small class="form-helper">This announcement will play when Button 1 is pressed. Typically used for track rules and safety instructions.</small>
             </div>
-            
             <div class="form-group">
               <label for="button2" class="form-label">
                 <i class="fas fa-chair seated-icon"></i> Button 2: Remain Seated
@@ -91,7 +92,6 @@
                 placeholder="Enter 'remain seated' announcement text">{{ announcements.button2 }}</textarea>
               <small class="form-helper">This announcement will play when Button 2 is pressed. Used for reminding drivers to remain seated at all times.</small>
             </div>
-            
             <div class="form-group">
               <label for="button3" class="form-label">
                 <i class="fas fa-exclamation-triangle other-icon"></i> Button 3: Other Announcement
@@ -108,29 +108,9 @@
           <div class="card-content">
             <div class="form-group">
               <label for="voice_id" class="form-label">Voice ID</label>
-              <div class="input-with-help">
-                <select id="voice_id" name="voice_id" class="form-control" required>
-                  <option value="en-US-AndrewMultilingualNeural" {% if tts.voice_id == 'en-US-AndrewMultilingualNeural' %}selected{% endif %}>English (US) - Andrew (Male)</option>
-                  <option value="en-US-JennyMultilingualNeural" {% if tts.voice_id == 'en-US-JennyMultilingualNeural' %}selected{% endif %}>English (US) - Jenny (Female)</option>
-                  <option value="en-US-GuyNeural" {% if tts.voice_id == 'en-US-GuyNeural' %}selected{% endif %}>English (US) - Guy (Male)</option>
-                  <option value="en-US-SaraNeural" {% if tts.voice_id == 'en-US-SaraNeural' %}selected{% endif %}>English (US) - Sara (Female)</option>
-                  <option value="en-GB-RyanNeural" {% if tts.voice_id == 'en-GB-RyanNeural' %}selected{% endif %}>English (UK) - Ryan (Male)</option>
-                  <option value="en-GB-SoniaNeural" {% if tts.voice_id == 'en-GB-SoniaNeural' %}selected{% endif %}>English (UK) - Sonia (Female)</option>
-                </select>
-                <div class="help-tooltip">
-                  <i class="fas fa-info-circle"></i>
-                  <span class="tooltip-text">Select a voice for the announcements</span>
-                </div>
-              </div>
+              <input type="text" id="voice_id" name="voice_id" class="form-control" value="en-US-AndrewMultilingualNeural" readonly>
             </div>
-            
-            <div class="form-group">
-              <label for="output_format" class="form-label">Output Format</label>
-              <select id="output_format" name="output_format" class="form-control" required>
-                <option value="mp3" {% if tts.output_format == 'mp3' %}selected{% endif %}>MP3</option>
-                <option value="wav" {% if tts.output_format == 'wav' %}selected{% endif %}>WAV</option>
-              </select>
-            </div>
+            <input type="hidden" id="output_format" name="output_format" value="mp3">
           </div>
         </div>
 
@@ -154,6 +134,10 @@
             </button>
             <button type="button" class="btn btn-green" id="test-button3">
               <i class="fas fa-play"></i> Test Other Announcement
+            </button>
+            <!-- New button to test Yiddish announcement -->
+            <button type="button" class="btn btn-warning" id="test-yiddish">
+              <i class="fas fa-play"></i> Test Yiddish Announcement
             </button>
           </div>
           <div id="test-status" class="status-message"></div>
@@ -200,9 +184,6 @@
           <div class="log-actions">
             <button type="button" class="btn btn-secondary" id="view-logs">
               <i class="fas fa-file-alt"></i> View Logs
-            </button>
-            <button type="button" class="btn btn-warning" id="restart-service">
-              <i class="fas fa-sync"></i> Restart Service
             </button>
           </div>
         </div>
@@ -256,7 +237,6 @@
     // Modal functionality
     document.getElementById('view-logs').addEventListener('click', function() {
       document.getElementById('log-modal').style.display = 'block';
-      // Here you would fetch actual logs from the server
       fetch('/logs')
         .then(response => response.text())
         .then(data => {
@@ -271,7 +251,6 @@
       document.getElementById('log-modal').style.display = 'none';
     });
 
-    // Close modal if clicked outside
     window.addEventListener('click', function(event) {
       if (event.target == document.getElementById('log-modal')) {
         document.getElementById('log-modal').style.display = 'none';
@@ -279,12 +258,10 @@
     });
     
     // Restart service functionality
-    document.getElementById('restart-service').addEventListener('click', function() {
+    document.getElementById('restart-service')?.addEventListener('click', function() {
       if (confirm('Are you sure you want to restart the announcement service?')) {
         document.getElementById('loading-overlay').classList.add('active');
-        fetch('/restart_service', {
-          method: 'POST'
-        })
+        fetch('/restart_service', { method: 'POST' })
         .then(response => response.json())
         .then(data => {
           document.getElementById('loading-overlay').classList.remove('active');
